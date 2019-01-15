@@ -39,7 +39,7 @@ public class Main {
 
         switch(threadsQty) {
             case ONE_THREAD:
-                // Фабрика генерит один поток без создания копии основного массива
+                // Генерим один поток без создания копии основного массива
                 Thread tS = new Calculator("single", Main.dataArray);
                 System.out.println("Created 1 thread");
                 tS.start();
@@ -49,7 +49,7 @@ public class Main {
                 } catch (InterruptedException e) {}
                 break;
             default:
-                // Фабрика генерит несколько потоков, делая копию части исходного массива
+                // Фабрика генерит несколько потоков, делая копии частей исходного массива для каждого потока
                 Thread[] threads = ThreadGenerator.generate(Main.dataArray, threadsQty);
                 System.out.println("Created " + threads.length + " threads");
 
@@ -85,7 +85,7 @@ public class Main {
  */
 class ThreadGenerator {
     /**
-     * Нужно сгенерить threads потоков и равномерно их нагрузить. Если длина исходного
+     * Нужно сгенерить thrdQty потоков и равномерно их нагрузить. Если длина исходного
      * массива не делится нацело на число потоков, то количество элементов массива,
      * равное остатку от деления, равномерно "размазываем" между потоками. В результате
      * нектором потокам придется обрабатывать на один элемент массива больше.
