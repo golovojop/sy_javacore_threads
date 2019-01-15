@@ -1,5 +1,7 @@
 package threads;
 
+import org.omg.CORBA.MARSHAL;
+
 import java.util.ArrayList;
 
 public class Main {
@@ -31,43 +33,42 @@ public class Main {
     }
 
     /**
-     * TODO: Сгенерить требуемое кол-во потоков. Если потоков несколько, то выдать каждому
-     * TODO: копию части исходного массива для вычислений.
-     *
-     * @param threadsQty Количество потоков вычисления
+     * Сгенерить требуемое кол-во потоков. Каждому выдать копию части исходного массива для вычислений.
      */
     public static void calculateIn(int threadsQty){
 
-        if(threadsQty == 1) {
-            // Фабрика генерит один поток без создания копии основного массива
-            Thread t = new ThreadFabric(dataArray, threadsQty).generateNoCopy();
-            System.out.println("Created 1 thread");
-            t.start();
+        switch(threadsQty) {
+            case ONE_THREAD:
+                // Фабрика генерит один поток без создания копии основного массива
+                Thread tS = new Calculator("single", Main.dataArray);
+                System.out.println("Created 1 thread");
+                tS.start();
 
-            try{
-                t.join();
-            } catch (InterruptedException e) {}
-        }
-        else {
-            // Фабрика генерит несколько потоков, делая копию части исходного массива
-            Thread[] threads = new ThreadFabric(dataArray, threadsQty).generateWithCopy();
-            System.out.println("Created " + threads.length + " threads");
+                try {
+                    tS.join();
+                } catch (InterruptedException e) {}
+                break;
+            default:
+                // Фабрика генерит несколько потоков, делая копию части исходного массива
+                Thread[] threads = ThreadGenerator.generate(Main.dataArray, threadsQty);
+                System.out.println("Created " + threads.length + " threads");
 
-            // Стартуем потоки
-            for(Thread t : threads) t.start();
+                // Стартуем потоки
+                for (Thread t : threads) t.start();
 
-            // Ждем завершения
-            try {
-                for (Thread t : threads) t.join();
+                // Ждем завершения
+                try {
+                    for (Thread t : threads) t.join();
 
-                // Собрать результирующий массив
-                int destPos = 0;
-                for(int i = 0; i < threads.length; i++){
-                    Calculator calc = (Calculator)threads[i];
-                    System.arraycopy(calc.getArray(), 0, dataArray, destPos, calc.getLength());
-                    destPos += calc.getLength();
-                }
-            } catch (InterruptedException e) {}
+                    // Собрать результирующий массив
+                    int destPos = 0;
+
+                    for(Thread t: threads){
+                        Calculator calc = (Calculator)t;
+                        System.arraycopy(calc.getArray(), 0, Main.dataArray, destPos, calc.getLength());
+                        destPos += calc.getLength();
+                    }
+                } catch (InterruptedException e) {}
         }
     }
 
@@ -82,71 +83,29 @@ public class Main {
 /**
  *
  */
-class ThreadFabric {
-    private final int sourceDataLength;
-    private float[] sourceData;
-    private final int threads;
-
-    public ThreadFabric(float[] sourceData, int threads) {
-        this.sourceDataLength = sourceData.length;
-        this.sourceData = sourceData;
-        this.threads = threads;
-    }
-
-    static Thread[] generate(float[] sourceData, int thrdQty){
-        int subArrayLength = sourceData.length / thrdQty;
-        int reminder = sourceData.length % thrdQty;
-        int index = 0;
-
-        ArrayList<Thread> al = new ArrayList<>();
-
-        for(int i = 0; i < thrdQty; i++) {
-            if(thrdQty == ONE_THREAD) {
-                al.add(Calculator("single", sourceData));
-                break;
-            }
-            else {
-                int length = (i < remainder) ?  (subArrayLength  + 1) : subArrayLength;
-                float[] subArray = new float[length];
-                System.arraycopy(sourceData, index, subArray, 0, length);
-                al.add(new Calculator(Integer.toString(i), subArray));
-                index += length;
-            }
-        }
-        return al.toArray(new Thread[al.size()]);
-
-
-
-
-    }
-
+class ThreadGenerator {
     /**
      * Нужно сгенерить threads потоков и равномерно их нагрузить. Если длина исходного
      * массива не делится нацело на число потоков, то количество элементов массива,
      * равное остатку от деления, равномерно "размазываем" между потоками. В результате
      * нектором потокам придется обрабатывать на один элемент массива больше.
      */
-    Thread[] generateWithCopy() {
-        int subArraySize = sourceDataLength / threads;
-        int remainder = sourceDataLength % threads;
+    static Thread[] generate(float[] sourceData, int thrdQty){
+        int subArrayLength = sourceData.length / thrdQty;
+        int remainder = sourceData.length % thrdQty;
         int index = 0;
 
         ArrayList<Thread> al = new ArrayList<>();
 
-        for(int i = 0; i < threads; i++) {
-            int length = (i < remainder) ?  (subArraySize  + 1) : subArraySize;
+        for(int i = 0; i < thrdQty; i++) {
+            int length = (i < remainder) ?  (subArrayLength  + 1) : subArrayLength;
 
             float[] subArray = new float[length];
             System.arraycopy(sourceData, index, subArray, 0, length);
-
             al.add(new Calculator(Integer.toString(i), subArray));
             index += length;
         }
         return al.toArray(new Thread[al.size()]);
-    }
-
-    Thread generateNoCopy() {
-        return new Calculator("single", sourceData);
     }
 }
 
@@ -181,4 +140,3 @@ class Calculator extends Thread {
         array[i] = (float)(array[i] * Math.sin(0.2f + i/5) * Math.cos(0.2f + i/5) * Math.cos(0.4f + i/2));
     }
 }
-
