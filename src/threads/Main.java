@@ -18,7 +18,7 @@ public class Main {
     public static void main(String[] args) {
 
         // Инициализация массива
-        Main.initData();
+        Main.initArray();
 
         // Вычисляем в один поток
         long millis = System.currentTimeMillis();
@@ -26,7 +26,7 @@ public class Main {
         System.out.println("Result: threads " + ONE_THREAD + ", duration " + (System.currentTimeMillis() - millis) + " ms\n");
 
         // Вычисляем в несколько потоков
-        Main.initData();
+        Main.initArray();
         millis = System.currentTimeMillis();
         calculateIn(MULTI_THREADS);
         System.out.println("Result: threads " + MULTI_THREADS + ", duration " + (System.currentTimeMillis() - millis) + " ms\n");
@@ -75,7 +75,7 @@ public class Main {
     /**
      * Инициализация исходного массива
      */
-    static void initData() {
+    static void initArray() {
         for(int i = 0; i < Main.dataArray.length; i++) Main.dataArray[i] = 1;
     }
 }
