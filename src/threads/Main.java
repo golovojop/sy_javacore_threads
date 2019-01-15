@@ -93,6 +93,33 @@ class ThreadFabric {
         this.threads = threads;
     }
 
+    static Thread[] generate(float[] sourceData, int thrdQty){
+        int subArrayLength = sourceData.length / thrdQty;
+        int reminder = sourceData.length % thrdQty;
+        int index = 0;
+
+        ArrayList<Thread> al = new ArrayList<>();
+
+        for(int i = 0; i < thrdQty; i++) {
+            if(thrdQty == ONE_THREAD) {
+                al.add(Calculator("single", sourceData));
+                break;
+            }
+            else {
+                int length = (i < remainder) ?  (subArrayLength  + 1) : subArrayLength;
+                float[] subArray = new float[length];
+                System.arraycopy(sourceData, index, subArray, 0, length);
+                al.add(new Calculator(Integer.toString(i), subArray));
+                index += length;
+            }
+        }
+        return al.toArray(new Thread[al.size()]);
+
+
+
+
+    }
+
     /**
      * Нужно сгенерить threads потоков и равномерно их нагрузить. Если длина исходного
      * массива не делится нацело на число потоков, то количество элементов массива,
